@@ -29,7 +29,8 @@
        (apply str)))
 
 (defn split-words [s]
-  (let [words (string/split s #"\s+")
+  (let [s (string/replace s #"--" "-- ")
+        words (string/split s #"\s+")
         words (remove empty? words)]
     (map (fn [w]
            (let [normalized (normalize w)
@@ -71,6 +72,7 @@
   (let [reveal-text (get-attr $w "data-reveal")]
     (inner-html $w reveal-text)
     (remove-attr $w "data-guess")
+    (remove-attr $w "style")
     (set-attr $w "class" "guessed last-guessed")))
 
 (defn mark-old [$w]
