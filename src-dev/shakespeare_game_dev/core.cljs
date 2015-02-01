@@ -4,4 +4,6 @@
    [figwheel.client :as fw]
    [shakespeare-game.core :refer [on-init]]))
 
-(defonce start-once (on-init))
+
+(println "Starting once")
+(fw/start {:on-jsload (fn [] (on-init))})

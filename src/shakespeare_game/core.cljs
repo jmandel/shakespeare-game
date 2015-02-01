@@ -1,7 +1,6 @@
 (ns shakespeare-game.core
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require
-   [figwheel.client :as fw]
    [clojure.string :as string]
    [cljs-http.client :as http]
    [cljs.core.async :refer [<! chan put! sliding-buffer]]))
@@ -12,20 +11,35 @@
 
 (defn normalize [w] (-> w (string/replace #"\W", "") string/lower-case))
 (defn blankify [w]
-  (let [underscores  (string/replace w #"\w", "_")
-        chars (filter #(= % "_") underscores)
-        nchars (count chars)]
-    (str underscores (when (> nchars 3) (str  "(" nchars ")")))))
+  (let [underscores  (string/replace w #"\w", "_")]
+    underscores))
 
 (defn nodelist-to-seq
   [nl]
   (let [result-seq (map #(.item nl %) (range (.-length nl)))]
     (doall result-seq)))
 
+
+(defn hintify [s]
+  (->> s
+       (partition-by (fn [c] (= c "_")))
+       (map (fn [snippet]  (if (= "_" (first snippet))
+                            (count snippet)
+                            (apply str snippet))))
+       (apply str)))
+
 (defn split-words [s]
   (let [words (string/split s #"\s+")
         words (remove empty? words)]
-    (map (fn [w] {:match-key (normalize w) :raw w :blank (blankify w) })
+    (map (fn [w]
+           (let [normalized (normalize w)
+                 blanked (blankify w)
+                 hinted (hintify blanked)]
+             {
+              :raw w
+              :match-key normalized
+              :blank blanked
+              :hint hinted}))
          words)))
 
 (defn elt [id] (.getElementById js/document id))
@@ -96,9 +110,11 @@
   (reset! listeners #{on-guess}))
 
 (defn render-word [w]
-  (str "<span data-guess='" (:match-key w)
-       "'data-reveal='" (string/replace (:raw w) #"'" "&#39;") "'>"
-       (:blank w) "</span>"))
+  (str "<span class='to-guess' data-guess='" (:match-key w)
+       "' data-reveal='" (string/replace (:raw w) #"'" "&#39;")
+       "' style='width: " (/ (count (:raw w)) 2)  "em'>"
+       ; "<span class='hint'>" (:hint w) "</span>"
+       (:hint w) "</span>"))
 
 (defn tag-words-in [$node]
   (let [contents (.-textContent $node)
@@ -109,7 +125,7 @@
                      (string/join " "))]
     (inner-html $node replacement)))
 
-(def dialog-css-patterns #{"a b" "blockquote a"})
+(def dialog-css-patterns #{"blockquote a"})
 (def delete-css-patterns #{"link" "table"})
 
 (defn render [body-dom]
@@ -155,6 +171,7 @@
 
 
 (defn on-init []
+  (println "loading with " (:selected-play @app-state))
   (inner-html script "loading...")
   (listen-to-guess)
   (get-requested-play)
@@ -167,5 +184,4 @@
         (inner-html script body-dom))))
 
 (add-event-listener js/window "hashchange" on-init)
-(fw/start {:on-jsload (fn [] (on-init))})
 (defonce start-once (on-init))
