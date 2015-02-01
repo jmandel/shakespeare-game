@@ -71,10 +71,10 @@
   (let [reveal-text (get-attr $w "data-reveal")]
     (inner-html $w reveal-text)
     (remove-attr $w "data-guess")
-    (set-attr $w "class" "last-guessed")))
+    (set-attr $w "class" "guessed last-guessed")))
 
 (defn mark-old [$w]
-    (remove-attr $w "class"))
+    (set-attr $w "class" "guessed"))
 
 (defn render-score []
   (let [$delta (elt "delta")
