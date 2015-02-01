@@ -124,21 +124,25 @@
 (defn get-requested-play []
   (let [hash (-> js/window.location.hash 
                  string/trim
-                 (subs 1)) 
+                 (subs 1))
+        play-slug (re-matches #"^[^\.]+$" hash)
+        scene-slug (re-matches #"^([^\.]+).\d.\d$" hash)
         url (cond
-         (re-matches #"^http://.*" hash) hash
-         (re-matches #"^[a-z]+$" hash) (str "http://shakespeare.mit.edu/" hash "/full.html")
-         :else "http://shakespeare.mit.edu/hamlet/full.html")]
+             play-slug (str "shakespeare.mit.edu/"
+                            play-slug "/full.html")
+             scene-slug (str "shakespeare.mit.edu/"
+                             (nth scene-slug 1) "/"
+                             (nth scene-slug 0) ".html")
+             :else "shakespeare.mit.edu/hamlet/hamlet.3.1.html")]
     (swap! app-state assoc-in [:selected-play] url)))
-
 
 (defn on-init []
   (println "loading with " (:selected-play @app-state))
   (inner-html script "loading...")
   (listen-to-guess)
   (get-requested-play)
-  (go (let [response (<! (jsonp-get (@app-state :selected-play)))
-            body (aget response "contents")
+  (go (let [response (<! (http/get (@app-state :selected-play)))
+            body (:body response)
             body-dom (string-to-dom body)]
         (reset! app-state {:score 0 :delta 0 :last-words []})
         (render body-dom)
