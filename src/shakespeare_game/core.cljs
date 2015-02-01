@@ -1,6 +1,10 @@
 (ns shakespeare-game.core
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require
+   [shakespeare-game.helpers :refer
+    [jsonp-get elt get-attr set-attr
+     add-event-listener remove-node remove-attr
+     string-to-dom dom-to-string inner-html]]
    [clojure.string :as string]
    [cljs-http.client :as http]
    [cljs.core.async :refer [<! chan put! sliding-buffer]]))
@@ -10,6 +14,7 @@
 (defonce app-state (atom {:selected-play "http://shakespeare.mit.edu/hamlet/full.html"}))
 
 (defn normalize [w] (-> w (string/replace #"\W", "") string/lower-case))
+
 (defn blankify [w]
   (let [underscores  (string/replace w #"\w", "_")]
     underscores))
@@ -39,31 +44,8 @@
              {
               :raw w
               :match-key normalized
-              :blank blanked
               :hint hinted}))
          words)))
-
-(defn elt [id] (.getElementById js/document id))
-(defn get-attr [$e a] (.getAttribute $e a))
-(defn set-attr [$e a val] (.setAttribute $e a val))
-(defn add-event-listener [$n e l] (.addEventListener $n e l))
-(defn remove-attr [$e a] (.removeAttribute $e a))
-(defn remove-node [$node] (-> $node 
-                              (.-parentNode)
-                              (.removeChild $node)))
-(defn string-to-dom [s]
-  (let [parser (js/DOMParser.)]
-    (.parseFromString parser s "text/html")))
-
-(defn dom-to-string [$n]
-  (let [serializer (js/XMLSerializer.)]
-    (.serializeToString serializer $n)))
-
-(defn inner-html [$e val]
-  (let [strval (if (= js/HTMLDocument (type val))
-                (dom-to-string val)
-                 val)]
-    (set! (.-innerHTML $e) strval)))
 
 (def script (elt "root"))
 (def guess-box (elt "guess-box"))
@@ -91,11 +73,11 @@
          nodelist-to-seq)))
 
 (defn on-guess [e]
-  (let [the-guess (-> (.-value guess-box) normalize)
-        query-path (str "span[data-guess='" the-guess "']")
-        revealed-words ($ query-path)]
-    (when the-guess
-      (set! (.-value guess-box) "")
+  (let [guesses (split-words (.-value guess-box))
+        query-paths (map  #(str "span[data-guess='" (:match-key %) "']") guesses)
+        revealed-words (mapcat $ query-paths)]
+    (when-not (empty? guesses)
+      (set! guess-box.value "")
       (swap! app-state update-in [:score] #(+ % (count revealed-words)))
       (swap! app-state assoc-in [:delta] (count revealed-words))
       (let [last-words (@app-state :last-words)]
@@ -118,7 +100,7 @@
        ; "<span class='hint'>" (:hint w) "</span>"
        (:hint w) "</span>"))
 
-(defn tag-words-in [$node]
+(defn tag-words [$node]
   (let [contents (.-textContent $node)
         replacement (->>
                      contents
@@ -127,39 +109,17 @@
                      (string/join " "))]
     (inner-html $node replacement)))
 
-(def dialog-css-patterns #{"blockquote a"})
-(def delete-css-patterns #{"link" "table"})
+(defn select-and-apply
+ [body-dom f patterns]
+ (doseq [selector patterns
+         $node ($ selector body-dom)] (f $node)))
+
+(def dom-processing-steps
+  {remove-node #{"link" "table"} tag-words #{"blockquote a"}})
 
 (defn render [body-dom]
-  (set! (.-a js/window) body-dom)
-  (doall (for [selector delete-css-patterns
-               $node ($ selector body-dom)]
-           (remove-node $node)))
-  (doall (for [selector dialog-css-patterns
-               $node ($ selector body-dom)]
-           (tag-words-in $node))))
-
-(defn random-char [] (rand-nth "abcdefghijklmnopqrstuvwxyz"))
-(defn random-word [n] (apply str (take n (repeatedly random-char))))
-
-(defonce any-url "http://www.whateverorigin.org/get?callback=")
-(defn jsonp-get [url]
-  (let [c (chan)
-        cb-name (random-word 36)
-        jsonp-url (str any-url cb-name "&url=" url)
-        script-node (doto (.createElement js/document "script")
-                      (aset "async" true)
-                      (aset "src" jsonp-url)
-                      (aset "id" cb-name))
-        cb (fn [response]
-             (js-delete js/window cb-name)
-             (remove-node script-node)
-             (put! c response))]
-    (let [head (-> (.getElementsByTagName js/document "head")
-                   (aget 0))]
-      (.appendChild head script-node))
-    (aset js/window cb-name cb)
-    c)) 
+  (doseq [[f pat] dom-processing-steps]
+    (select-and-apply body-dom f pat)))
 
 (defn get-requested-play []
   (let [hash (-> js/window.location.hash 
