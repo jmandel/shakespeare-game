@@ -1,0 +1,32 @@
+/* some style */
+body {
+  font-family: courier;
+}
+
+.guess {
+    padding-top: 10px;
+    padding-left: 10px;
+ position: fixed;
+ top: 0px;
+ width: 100%;
+ background: slateblue;
+ padding-bottom: .5em;
+ color: white;
+}
+.guess span {
+ font-weight: bold;
+ }
+
+.last-guessed {
+  background: yellow;
+}
+
+body {
+  margin: 0px;
+  padding: 0px;
+  padding-top: 2em;
+}
+
+body div {
+ padding-left: 10px;
+}
