@@ -150,4 +150,10 @@
         (inner-html script body-dom))))
 
 (add-event-listener js/window "hashchange" on-init)
+(add-event-listener js/window "beforeunload"
+  (fn [e] (let [msg "Progress will be lost."
+                e (or e js/event)]
+            (when e (aset e "returnValue" msg))
+            msg)))
+
 (defonce start-once (on-init))
