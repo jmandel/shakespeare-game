@@ -5,13 +5,12 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2665"]
+                 [org.clojure/clojurescript "0.0-2760"]
                  [com.facebook/react "0.12.2"]
                  [figwheel "0.2.2-SNAPSHOT"]
                  [cljs-http "0.1.24"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [sablono "0.2.22"]
-                 [org.om/om "0.8.1"]]
+                 [org.omcljs/om "0.8.8"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]
             [lein-figwheel "0.2.2-SNAPSHOT"]]
@@ -26,13 +25,14 @@
                          :optimizations :none
                          :source-map true
                          :source-map-timestamp true
-                         :preamble ["react/react.min.js"]
                          :cache-analysis true }}
              {:id "min"
               :source-paths ["src"]
-              :compiler {:output-to "resources/public/shakespeare_game.min.js"
-                         :optimizations :advanced
-                         :preamble ["react/react.min.js"]
+              :compiler {
+                         :output-dir "resources/public"
+                         :output-to "resources/public/shakespeare_game.min.js"
+                         :optimizations :whitespace
+                         :source-map  "resources/public/shakespeare_game.min.js.map"
                          :pretty-print false}}]}
 
   :figwheel {

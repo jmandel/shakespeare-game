@@ -12,6 +12,7 @@
    [cljs.core.async :refer [<! chan put! sliding-buffer close! ]]))
 
 (enable-console-print!)
+(println "loaded")
 
 (defonce app-state (atom {:score 0 :delta 0 :last-words [] :guessed #{}
                           :url-state {:selected-play "hamlet"}}))
@@ -74,18 +75,17 @@
         text (.-innerText $node)
         lines (string/split text #"\n")
         indent-depth (fn [l] (let [m (re-matches #"^(\t+).+$" l)]
-                              (if m (count  (nth m 1)) 0)))
+                              (if m (count (nth m 1)) 0)))
         process-line (fn [l] (let [depth (indent-depth l)
                                   is-dialog? (= 2 depth)
                                   words (split-words l)
                                   lead-in (repeat depth "&nbsp;&nbsp;&nbsp;")
-                                  f (if is-dialog? render-word #(str (:raw %) " "))]
+                                  f (if is-dialog? #(render-word % data) #(str (:raw %) " "))]
                               (concat ["&nbsp;"] lead-in (string/join " " (map f words)))))
         entire (->> lines
                     (map process-line)
                     (map #(apply str (concat ["<div>"] % ["</div>"])))
                     (string/join "\n"))]
-        
     (inner-html $div entire)
     (replace-node $node $div)))
 
