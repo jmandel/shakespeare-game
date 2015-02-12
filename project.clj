@@ -26,11 +26,13 @@
                          :optimizations :none
                          :source-map true
                          :source-map-timestamp true
+                         :preamble ["react/react.min.js"]
                          :cache-analysis true }}
              {:id "min"
               :source-paths ["src"]
               :compiler {:output-to "resources/public/shakespeare_game.min.js"
                          :optimizations :advanced
+                         :preamble ["react/react.min.js"]
                          :pretty-print false}}]}
 
   :figwheel {

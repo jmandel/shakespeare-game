@@ -13,6 +13,13 @@
 (defn remove-node [$node] (-> $node 
                               (.-parentNode)
                               (.removeChild $node)))
+
+(defn replace-node [$node $new]
+  (-> $node
+      (.-parentNode)
+      (.insertBefore $new $node))
+  (remove-node $node))
+
 (defn string-to-dom [s]
   (let [parser (js/DOMParser.)]
     (.parseFromString parser s "text/html")))
@@ -48,3 +55,16 @@
       (.appendChild head script-node))
     (aset js/window cb-name cb)
     c)) 
+
+(defn nodelist-to-seq
+  [nl]
+  (let [result-seq (map #(.item nl %) (range (.-length nl)))]
+    (doall result-seq)))
+
+
+(defn $
+  ([s] ($ s js/document))
+  ([s doc]
+     (-> (.querySelectorAll doc s)
+         nodelist-to-seq)))
+

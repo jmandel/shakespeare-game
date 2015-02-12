@@ -9,6 +9,7 @@ body {
 	padding-left: 10px;
 	position: fixed;
 	top: 0px;
+	left: 0px;
 	width: 100%;
 	background: slateblue;
 	padding-bottom: .5em;
@@ -28,20 +29,21 @@ body div {
 	padding-left: 10px;
 }
 
-#guess-box {
+.guess-box {
 	border-radius: 25px;
 	border: 1px solid black;
 	padding-left: 1em;
+        margin-right: 1em;
 }
 
-#guess-box:focus {
+.guess-box:focus {
 	outline: none;
 }
 
 @media only screen
 and (min-device-width : 320px)
 and (max-device-width : 480px) {
-    #guess-box {width: 8em;}
+    .guess-box {width: 8em;}
     
     }
 
