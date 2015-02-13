@@ -6,7 +6,6 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2760"]
-                 [com.facebook/react "0.12.2"]
                  [figwheel "0.2.2-SNAPSHOT"]
                  [cljs-http "0.1.24"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
@@ -15,7 +14,6 @@
   :plugins [[lein-cljsbuild "1.0.4"]
             [lein-figwheel "0.2.2-SNAPSHOT"]]
 
-  :source-paths ["src"]
   
   :cljsbuild {
     :builds [{:id "dev"
@@ -31,8 +29,8 @@
               :compiler {
                          :output-dir "resources/public"
                          :output-to "resources/public/shakespeare_game.min.js"
-                         :optimizations :whitespace
                          :source-map  "resources/public/shakespeare_game.min.js.map"
+                         :optimizations :advanced
                          :pretty-print false}}]}
 
   :figwheel {
