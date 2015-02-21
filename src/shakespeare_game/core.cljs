@@ -163,7 +163,7 @@
 
 (defn handle-guesses [guesses data owner last-words]
   (let [node (om/get-node owner)
-        query-paths (map #(str "span[data-guess='" (:match-key %) "']") guesses)
+        query-paths (map #(str "span[data-guess='" % "']") (distinct (map :match-key guesses)))
         revealed-words (mapcat $ query-paths)]
       (om/transact! data [:score] #(+ % (count revealed-words)))
       (om/transact! data [:guessed] #(reduce conj % (remove nil? (map :raw guesses)) ))
