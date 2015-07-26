@@ -74,12 +74,12 @@
   (let [$div (.createElement js/document "div")
         text (.-innerText $node)
         lines (string/split text #"\n")
-        indent-depth (fn [l] (let [m (re-matches #"^(\t+).+$" l)]
+        indent-depth (fn [l] (let [m (re-matches #"^(\s+).+$" l)]
                               (if m (count (nth m 1)) 0)))
         process-line (fn [l] (let [depth (indent-depth l)
-                                  is-dialog? (= 2 depth)
+                                  is-dialog? (= 4 depth)
                                   words (split-words l)
-                                  lead-in (repeat depth "&nbsp;&nbsp;&nbsp;")
+                                  lead-in (repeat depth "&nbsp;")
                                   f (if is-dialog? #(render-word % data) #(str (:raw %) " "))]
                               (concat ["&nbsp;"] lead-in (string/join " " (map f words)))))
         entire (->> lines
@@ -118,6 +118,7 @@
         scene-slug (re-matches #"^([^\.]+).\d.\d$" hash)]
     (cond
      (re-matches #"jurassic_park" hash) {:type :plaintext :url "movies/jurassic_park.html"}
+     (re-matches #"last_crusade" hash) {:type :plaintext :url "movies/last_crusade.html"}
      play-slug {:type :shakespeare :url (str "shakespeare.mit.edu/" play-slug "/full.html")}
      scene-slug {:type :shakespeare :url (str "shakespeare.mit.edu/"
                                               (nth scene-slug 1) "/"
